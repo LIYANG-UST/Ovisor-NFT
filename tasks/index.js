@@ -1,7 +1,6 @@
 
 const { types, task } = require("hardhat/config");
-const { getAllowList, getAirdrop } = require("../scripts/allowList");
-const { readAddressList } = require("../scripts/contractAddress");
+const { getAllowList, getAirdrop, readAddressList } = require("../scripts/contractAddress");
 
 require("@nomiclabs/hardhat-ethers")
 
@@ -203,7 +202,7 @@ task("setPrice", "Set price for public sale or allowlist sale")
             const tx = await nft.setPublicSalePrice(hre.ethers.utils.parseUnits(args.price));
             console.log("Tx details: ", await tx.wait());
 
-            const price = await nft.publicSalePrice();
+            const price = await nft.pricePublicSale();
             console.log("Public sale price: ", hre.ethers.utils.formatUnits(price), " ether");
         }
 
@@ -211,9 +210,11 @@ task("setPrice", "Set price for public sale or allowlist sale")
             const tx = await nft.setAllowlistSalePrice(hre.ethers.utils.parseUnits(args.price));
             console.log("Tx details: ", await tx.wait());
 
-            const price = await nft.allowlistSalePrice();
+            const price = await nft.priceAllowlist();
             console.log("Allowlist sale price: ", hre.ethers.utils.formatUnits(price), " ether");
         }
+
+        else console.error("Invalid type");
 
     })
 

@@ -3,8 +3,8 @@
   "scripts": {
     "deploy": "npx hardhat run scripts/deploy.js",
     "compile": "npx hardhat compile",
-    "setStatus": "npx hardhat run setStatus",
-    "setAirdrop": "npx hardhat run setAirdrop.js",
+    "setStatus": "npx hardhat  setStatus",
+    "setAirdrop": "npx hardhat  setAirdropRoot",
     "setAllowlist": "npx hardhat setAllowlistRoot",
     "mintAirdrop": "npx hardhat mintAirdrop",
     "ownerMint": "npx hardhat ownerMint",
