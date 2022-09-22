@@ -9,7 +9,7 @@ async function main() {
   const { network } = hre;
 
   const nftContract = await ethers.getContractFactory("OvisorNFT");
-  const nft = await nftContract.deploy(ethers.constants.AddressZero);
+  const nft = await nftContract.deploy();
 
   await nft.deployed();
 

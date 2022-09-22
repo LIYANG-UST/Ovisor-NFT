@@ -7,10 +7,12 @@ require("@nomiclabs/hardhat-ethers")
 
 
 const { MerkleTree } = require('merkletreejs');
+const { getAirdropProof, getAllowlistProof } = require("../scripts/generateProof");
 
 const addressList = readAddressList();
 
 
+// Status: 0 Init 1 Airdrop 2 Allowlist Sale 3 Public Sale
 task("setStatus", "Set status of nft contract")
     .addParam("status", "Status to be changed", null, types.int)
     .setAction(async (args, hre) => {
@@ -19,8 +21,8 @@ task("setStatus", "Set status of nft contract")
         const [dev_account] = await hre.ethers.getSigners();
         console.log("signer address:", dev_account.address);
 
-        const nftFactory = await hre.ethers.getContractFactory("DegisNFT");
-        const nftAddress = addressList[network.name].DegisNFT;
+        const nftFactory = await hre.ethers.getContractFactory("OvisorNFT");
+        const nftAddress = addressList[network.name].OvisorNFT;
         const nft = nftFactory.attach(nftAddress);
 
         const initStatus = await nft.status();
@@ -31,6 +33,33 @@ task("setStatus", "Set status of nft contract")
 
         const currentStatus = await nft.status();
         console.log("Status after change: ", currentStatus.toNumber());
+    })
+
+task("setAirdropRoot", "Set merkle root of airdrop")
+    .setAction(async (_, hre) => {
+        const { network } = hre;
+        const { keccak256 } = hre.ethers.utils;
+
+
+        const [dev_account] = await hre.ethers.getSigners();
+        console.log("signer address:", dev_account.address);
+
+        const airdropList = getAirdrop();
+        const stdList = airdropList.map(address => hre.ethers.utils.getAddress(address))
+        console.log("Full airdrop list: ", stdList);
+
+        const leaves = stdList.map(account => keccak256(account))
+        const tree = new MerkleTree(leaves, keccak256, { sort: true })
+        const merkleRoot = tree.getHexRoot();
+
+        console.log("New root to set: ", merkleRoot);
+
+        const nftFactory = await hre.ethers.getContractFactory("OvisorNFT");
+        const nftAddress = addressList[network.name].OvisorNFT;
+        const nft = nftFactory.attach(nftAddress);
+
+        const tx = await nft.setAirdropMerkleRoot(merkleRoot);
+        console.log("Tx details: ", await tx.wait())
     })
 
 task("setAllowlistRoot", "Set merkle root of allowlist")
@@ -52,8 +81,8 @@ task("setAllowlistRoot", "Set merkle root of allowlist")
 
         console.log("New root to set: ", merkleRoot);
 
-        const nftFactory = await hre.ethers.getContractFactory("DegisNFT");
-        const nftAddress = addressList[network.name].DegisNFT;
+        const nftFactory = await hre.ethers.getContractFactory("OvisorNFT");
+        const nftAddress = addressList[network.name].OvisorNFT;
         const nft = nftFactory.attach(nftAddress);
 
         const tx = await nft.setAllowlistMerkleRoot(merkleRoot);
@@ -72,8 +101,8 @@ task("mintAirdrop", "Mint airdrop for users")
         const stdList = airdropList.map(address => hre.ethers.utils.getAddress(address))
         console.log("airdrop list:", stdList);
 
-        const nftFactory = await hre.ethers.getContractFactory("DegisNFT");
-        const nftAddress = addressList[network.name].DegisNFT;
+        const nftFactory = await hre.ethers.getContractFactory("OvisorNFT");
+        const nftAddress = addressList[network.name].OvisorNFT;
         const nft = nftFactory.attach(nftAddress);
 
         const tx = await nft.mintAirdrop(airdropList);
@@ -92,8 +121,8 @@ task("transferNFT", "Transfer degis nft from owner")
         const [dev_account] = await hre.ethers.getSigners();
         console.log("signer address:", dev_account.address);
 
-        const nftFactory = await hre.ethers.getContractFactory("DegisNFT");
-        const nftAddress = addressList[network.name].DegisNFT;
+        const nftFactory = await hre.ethers.getContractFactory("OvisorNFT");
+        const nftAddress = addressList[network.name].OvisorNFT;
         const nft = nftFactory.attach(nftAddress);
 
         const initOwner = await nft.ownerOf(args.id);
@@ -115,8 +144,8 @@ task("setBaseURI", "Set the baseURI of degis nft")
         const [dev_account] = await hre.ethers.getSigners();
         console.log("signer address:", dev_account.address);
 
-        const nftFactory = await hre.ethers.getContractFactory("DegisNFT");
-        const nftAddress = addressList[network.name].DegisNFT;
+        const nftFactory = await hre.ethers.getContractFactory("OvisorNFT");
+        const nftAddress = addressList[network.name].OvisorNFT;
         const nft = nftFactory.attach(nftAddress);
 
 
@@ -137,8 +166,8 @@ task("ownerMint", "Owner mint some nfts")
         const [dev_account] = await hre.ethers.getSigners();
         console.log("signer address: ", dev_account.address);
 
-        const nftFactory = await hre.ethers.getContractFactory("DegisNFT");
-        const nftAddress = addressList[network.name].DegisNFT;
+        const nftFactory = await hre.ethers.getContractFactory("OvisorNFT");
+        const nftAddress = addressList[network.name].OvisorNFT;
         const nft = nftFactory.attach(nftAddress);
 
         const alreadyMintedBefore = await nft.mintedAmount();
@@ -157,37 +186,58 @@ task("ownerMint", "Owner mint some nfts")
         console.log("NFT balance after: ", balanceAfter.toNumber())
     })
 
-task("stake", "Stake nft")
-    .addParam("id", "token id", null, types.int)
+task("setPrice", "Set price for public sale or allowlist sale")
+    .addParam("type", "Type", null, types.string)
+    .addParam("price", "Sale price in ether", null, types.string)
     .setAction(async (args, hre) => {
         const { network } = hre;
 
         const [dev_account] = await hre.ethers.getSigners();
         console.log("signer address: ", dev_account.address);
 
-        const nftFactory = await hre.ethers.getContractFactory("DegisNFT");
-        const nftAddress = addressList[network.name].DegisNFT;
+        const nftFactory = await hre.ethers.getContractFactory("OvisorNFT");
+        const nftAddress = addressList[network.name].OvisorNFT;
         const nft = nftFactory.attach(nftAddress);
 
-        const stakingFactory = await hre.ethers.getContractFactory("NFTStaking");
-        const stakingAddress = addressList[network.name].NFTStaking;
-        const staking = stakingFactory.attach(stakingAddress);
+        if (args.type == "publicSale") {
+            const tx = await nft.setPublicSalePrice(hre.ethers.utils.parseUnits(args.price));
+            console.log("Tx details: ", await tx.wait());
 
-        const isOwner = await nft.ownerOf(args.id);
-        console.log("owner of ", args.id, " is ", isOwner)
-
-        const ve = await staking.veDEG();
-        console.log("ve", ve);
-        const nftinstaking = await staking.degisNFT();
-        console.log("nft", nftinstaking)
-
-        if (isOwner == dev_account.address) {
-
-            const approve_tx = await nft.setApprovalForAll(staking.address, true);
-            console.log("approve tx: ", await approve_tx.wait())
-
-            const tx = await staking.stake(args.id);
-            console.log("Tx details: ", await tx.wait())
+            const price = await nft.publicSalePrice();
+            console.log("Public sale price: ", hre.ethers.utils.formatUnits(price), " ether");
         }
-        else console.log("not owner")
+
+        else if (args.type == "allowlistSale") {
+            const tx = await nft.setAllowlistSalePrice(hre.ethers.utils.parseUnits(args.price));
+            console.log("Tx details: ", await tx.wait());
+
+            const price = await nft.allowlistSalePrice();
+            console.log("Allowlist sale price: ", hre.ethers.utils.formatUnits(price), " ether");
+        }
+
+    })
+
+task("getProof", "Get proof for airdrop or allowlist")
+    .addParam("type", "Type", null, types.string)
+    .addParam("address", "Address", null, types.string)
+    .setAction(async (args, hre) => {
+        const { network } = hre;
+
+        const [dev_account] = await hre.ethers.getSigners();
+        console.log("signer address: ", dev_account.address);
+
+        const nftFactory = await hre.ethers.getContractFactory("OvisorNFT");
+        const nftAddress = addressList[network.name].OvisorNFT;
+        const nft = nftFactory.attach(nftAddress);
+
+
+        if (args.type == "airdrop") {
+            const proof = getAirdropProof(args.address);
+            console.log("Proof: ", proof);
+        }
+
+        else if (args.type == "allowlistSale") {
+            const proof = getAllowlistProof(args.address);
+            console.log("Proof: ", proof);
+        }
     })

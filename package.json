@@ -2,7 +2,14 @@
   "name": "hardhat-project",
   "scripts": {
     "deploy": "npx hardhat run scripts/deploy.js",
-    "compile": "npx hardhat compile"
+    "compile": "npx hardhat compile",
+    "setStatus": "npx hardhat run setStatus",
+    "setAirdrop": "npx hardhat run setAirdrop.js",
+    "setAllowlist": "npx hardhat setAllowlistRoot",
+    "mintAirdrop": "npx hardhat mintAirdrop",
+    "ownerMint": "npx hardhat ownerMint",
+    "setURI": "npx hardhat setBaseURI",
+    "setPrice": "npx hardhat setPrice"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^2.0.0",

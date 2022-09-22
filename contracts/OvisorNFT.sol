@@ -212,7 +212,10 @@ contract OvisorNFT is ERC721, Ownable, ReentrancyGuard {
         uint256 startId = mintedAmount + 1;
 
         for (uint256 i; i < userAmount; ) {
-            _mint(_users[i], 1);
+            // Will not mint to those who already claimed
+            if (!airdroplistClaimed[_users[i]]) {
+                _mint(_users[i], 1);
+            }
 
             unchecked {
                 ++i;
