@@ -79,3 +79,8 @@ yarn ownerMint --network {network_name} --address {user_address} --amount {amoun
 ```
 yarn setPrice --network {network_name} --type {"publicSale" || "allowlistSale"} --price {price (in ether)}
 ```
+
+## Set URI
+```
+yarn setURI --network {network_name} --uri {URI}
+```
