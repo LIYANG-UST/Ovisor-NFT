@@ -9,7 +9,8 @@
     "mintAirdrop": "npx hardhat mintAirdrop",
     "ownerMint": "npx hardhat ownerMint",
     "setURI": "npx hardhat setBaseURI",
-    "setPrice": "npx hardhat setPrice"
+    "setPrice": "npx hardhat setPrice",
+    "getProof": "npx hardhat getProof"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^2.0.0",

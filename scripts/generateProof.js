@@ -1,8 +1,9 @@
 const keccak256 = require("keccak256");
+const { default: MerkleTree } = require("merkletreejs");
 const { getAirdrop } = require("./contractAddress");
 
 
-const getAllowlistProof = async function (address) {
+const getAllowlistProof = function (address) {
     const allowlist = getAllowList();
     const stdList = allowlist.map(address => hre.ethers.utils.getAddress(address))
     console.log("Full allowlist: ", stdList);
@@ -13,10 +14,12 @@ const getAllowlistProof = async function (address) {
     const proof = tree.getHexProof(keccak256(address))
 
     console.log("allowlist proof ", proof)
+
+    return proof
 }
 
 
-const getAirdropProof = async function (address) {
+const getAirdropProof = function (address) {
     const airdropList = getAirdrop();
     const stdList = airdropList.map(address => hre.ethers.utils.getAddress(address))
     console.log("Full allowlist: ", stdList);
@@ -27,6 +30,8 @@ const getAirdropProof = async function (address) {
     const proof = tree.getHexProof(keccak256(address))
 
     console.log("airdrop proof ", proof)
+
+    return proof
 }
 
 module.exports = {
